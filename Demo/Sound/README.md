@@ -14,4 +14,4 @@ Optional WAV files used by TinyTetris (same layout as TinyGomoku):
 
 If a file is missing, the game still runs; that cue is skipped.
 
-You can reuse suitable clips from [効果音ラボ](https://soundeffect-lab.info/) or copy compatible WAVs from TinyGomoku and rename them.
+You can reuse suitable clips from [効果音ラボ](https://soundeffect-lab.info/) or copy compatible WAVs from TinyTetris and rename them.
