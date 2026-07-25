@@ -5,6 +5,8 @@ A tiny Tetris game written in PureBasic, sharing the same project style as [Tiny
 ![PureBasic](https://img.shields.io/badge/language-PureBasic-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
+![Screenshot](https://github.com/jiowcl/TinyTetris/blob/master/Screenshot/Demo1.png)
+
 ## Environment
 
 - Windows 11 above (recommend)
