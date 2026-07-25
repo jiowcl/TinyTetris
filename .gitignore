@@ -1,0 +1,12 @@
+### VisualStudioCode ###
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+### PureBasic ###
+*.exe
+*.exe.manifest
+*.res
+*.pb.cfg
+*.pbi.cfg
