@@ -41,6 +41,29 @@ Procedure.i ClampI(v.i, lo.i, hi.i)
 EndProcedure
 
 ; <summary>
+; EaseOutQuad100
+; </summary>
+Procedure.i EaseOutQuad100(t.i)
+  Protected u.i
+
+  If t <= 0 : ProcedureReturn 0 : EndIf
+  If t >= 100 : ProcedureReturn 100 : EndIf
+
+  u = 100 - t
+  ProcedureReturn 100 - (u * u) / 100
+EndProcedure
+
+; <summary>
+; EaseInQuad100
+; </summary>
+Procedure.i EaseInQuad100(t.i)
+  If t <= 0 : ProcedureReturn 0 : EndIf
+  If t >= 100 : ProcedureReturn 100 : EndIf
+
+  ProcedureReturn (t * t) / 100
+EndProcedure
+
+; <summary>
 ; PlaySoundSafe
 ; </summary>
 Procedure PlaySoundSafe(soundId.i)
@@ -63,7 +86,15 @@ Procedure UpdateStatus()
     Case #STATE_PAUSED
       SetGadgetText(#LBL_STATUS, "Paused")
     Case #STATE_LINECLEAR
-      SetGadgetText(#LBL_STATUS, "Line Clear!")
+      If clearCount >= 4
+        SetGadgetText(#LBL_STATUS, "Tetris!")
+      Else
+        SetGadgetText(#LBL_STATUS, "Line Clear ×" + Str(clearCount))
+      EndIf
+    Case #STATE_LINEFALL
+      SetGadgetText(#LBL_STATUS, "Stack Drop")
+    Case #STATE_SPAWNWAIT
+      SetGadgetText(#LBL_STATUS, "Playing — Level " + Str(level + 1))
     Case #STATE_GAMEOVER
       SetGadgetText(#LBL_STATUS, "Game Over — Score " + Str(score))
   EndSelect
@@ -74,9 +105,11 @@ EndProcedure
 ; </summary>
 Procedure LoadUIFont()
   uiFont = LoadFont(#PB_Any, "Microsoft JhengHei UI", 12, #PB_Font_HighQuality)
+
   If uiFont = 0
     uiFont = LoadFont(#PB_Any, "Microsoft JhengHei", 12, #PB_Font_HighQuality)
   EndIf
+
   If uiFont = 0
     uiFont = LoadFont(#PB_Any, "Segoe UI", 12, #PB_Font_HighQuality)
   EndIf
@@ -104,10 +137,11 @@ Procedure LoadUIFont()
   EndIf
 
   panelFont = LoadFont(#PB_Any, "Consolas", 14, #PB_Font_HighQuality | #PB_Font_Bold)
+  
   If panelFont = 0
     panelFont = LoadFont(#PB_Any, "Cascadia Mono", 14, #PB_Font_HighQuality | #PB_Font_Bold)
   EndIf
-  
+
   If panelFont = 0
     panelFont = LoadFont(#PB_Any, "Courier New", 14, #PB_Font_HighQuality | #PB_Font_Bold)
   EndIf
@@ -134,6 +168,10 @@ Procedure LoadPrefs()
   PreferenceGroup("Score")
   highScore = ReadPreferenceInteger("HighScore", 0)
 
+  PreferenceGroup("Input")
+  dasDelayMs = ReadPreferenceInteger("DasDelay", #DAS_DELAY_DEFAULT)
+  dasRepeatMs = ReadPreferenceInteger("DasRepeat", #DAS_REPEAT_DEFAULT)
+
   ClosePreferences()
 
   If soundEnabled <> 0
@@ -145,6 +183,9 @@ Procedure LoadPrefs()
   If highScore < 0
     highScore = 0
   EndIf
+
+  dasDelayMs = ClampI(dasDelayMs, 80, 400)
+  dasRepeatMs = ClampI(dasRepeatMs, 16, 120)
 EndProcedure
 
 ; <summary>
@@ -168,6 +209,9 @@ Procedure SavePrefs()
     soundEnabled = #False
   EndIf
 
+  dasDelayMs = ClampI(dasDelayMs, 80, 400)
+  dasRepeatMs = ClampI(dasRepeatMs, 16, 120)
+
   If CreatePreferences(PrefsFilePath()) = 0
     ProcedureReturn
   EndIf
@@ -177,6 +221,10 @@ Procedure SavePrefs()
 
   PreferenceGroup("Score")
   WritePreferenceInteger("HighScore", highScore)
+
+  PreferenceGroup("Input")
+  WritePreferenceInteger("DasDelay", dasDelayMs)
+  WritePreferenceInteger("DasRepeat", dasRepeatMs)
 
   ClosePreferences()
 EndProcedure

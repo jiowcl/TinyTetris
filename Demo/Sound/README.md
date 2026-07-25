@@ -10,6 +10,7 @@ Optional WAV files used by TinyTetris (same layout as TinyGomoku):
 | `103.wav` | Line clear |
 | `104.wav` | Tetris (4 lines) |
 | `105.wav` | Hold |
+| `106.wav` | Level up |
 | `200.wav` | Game over |
 
 If a file is missing, the game still runs; that cue is skipped.

@@ -57,12 +57,12 @@
       <options asm="1" thread="1" xpskin="1" dpiaware="1" dllprotection="1" onerror="1" optimizer="1"/>
       <temporaryexe value="source"/>
       <versioninfo enable="1">
-        <field0 value="1.0.0.0"/>
-        <field1 value="1.0.0.0"/>
+        <field0 value="1.1.0.0"/>
+        <field1 value="1.1.0.0"/>
         <field2 value="Inwazy Technology"/>
         <field3 value="TinyTetris"/>
-        <field4 value="1.0"/>
-        <field5 value="1.0"/>
+        <field4 value="1.1"/>
+        <field5 value="1.1"/>
         <field6 value="A Tiny Tetris Game Written in PureBasic"/>
         <field7 value="TinyTetris"/>
         <field8 value="TinyTetris"/>

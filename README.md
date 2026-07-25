@@ -1,6 +1,6 @@
 # TinyTetris
 
-A tiny Tetris game written in PureBasic, sharing the same project style as [TinyGomoku](https://github.com/jiowcl/TinyGomoku).  
+A tiny Tetris game written in PureBasic.  
 
 ![PureBasic](https://img.shields.io/badge/language-PureBasic-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -37,10 +37,12 @@ Buttons: **Restart**, **Pause**, **Sound**. High score and sound preference are 
 
 - 10×20 playfield (2 hidden spawn rows)
 - 7 tetrominoes with simple wall kicks
-- 7-bag randomizer
-- Ghost piece, Hold, Next preview
-- Soft / hard drop, DAS left-right repeat
-- Lock delay, line-clear flash
+- 7-bag randomizer, Next queue ×3, Hold (dimmed when used)
+- Ghost piece, soft / hard drop with drop trail
+- Tunable DAS/ARR (`DasDelay` / `DasRepeat` in `TinyTetris.ini`)
+- Lock delay with reset limit (15), lock flash, grounded pulse
+- Line-clear flash → stack fall animation → spawn delay
+- Clear particles, level-up banner
 - Nintendo-style scoring and level speed-up
 - Optional WAV cues under `TinyTetris/Sound/`
 

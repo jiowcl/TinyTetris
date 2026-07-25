@@ -151,7 +151,7 @@ Procedure InputTick()
       dasRepeating = #False
     ElseIf dasDir = -1
       If dasRepeating = #False
-        If now - dasAt >= #DAS_DELAY_MS
+        If now - dasAt >= dasDelayMs
           dasRepeating = #True
           dasAt = now
 
@@ -159,7 +159,7 @@ Procedure InputTick()
             DrawBoard()
           EndIf
         EndIf
-      ElseIf now - dasAt >= #DAS_REPEAT_MS
+      ElseIf now - dasAt >= dasRepeatMs
         dasAt = now
         If TryMove(-1, 0)
           DrawBoard()
@@ -178,7 +178,7 @@ Procedure InputTick()
       dasRepeating = #False
     ElseIf dasDir = 1
       If dasRepeating = #False
-        If now - dasAt >= #DAS_DELAY_MS
+        If now - dasAt >= dasDelayMs
           dasRepeating = #True
           dasAt = now
 
@@ -186,7 +186,7 @@ Procedure InputTick()
             DrawBoard()
           EndIf
         EndIf
-      ElseIf now - dasAt >= #DAS_REPEAT_MS
+      ElseIf now - dasAt >= dasRepeatMs
         dasAt = now
 
         If TryMove(1, 0)
@@ -199,18 +199,15 @@ Procedure InputTick()
     dasRepeating = #False
   EndIf
 
-  ; Soft drop
+  ; Soft drop (faster ARR than sideways)
   If downDown
     If keyDownPrev = #False
       SoftDropStep()
-      
       softDropAt = now
-
       UpdateStatus()
       DrawBoard()
-    ElseIf now - softDropAt >= #DAS_REPEAT_MS
+    ElseIf now - softDropAt >= #SOFT_REPEAT_MS
       softDropAt = now
-
       SoftDropStep()
       UpdateStatus()
       DrawBoard()

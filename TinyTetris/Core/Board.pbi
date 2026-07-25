@@ -13,7 +13,6 @@ Procedure SyncCanvasSize()
   If w > 0
     canvasW = w
   EndIf
-
   If h > 0
     canvasH = h
   EndIf
@@ -28,7 +27,6 @@ Procedure CalculateLayout()
 
   fieldPixelH = canvasH - margin * 2
   cellSize = fieldPixelH / #FIELD_VISIBLE_H
-
   If cellSize < 12
     cellSize = 12
   EndIf
@@ -47,7 +45,6 @@ Procedure EnsureBoardImage()
     If boardImage <> -1
       FreeImage(boardImage)
     EndIf
-
     boardImage = CreateImage(#PB_Any, canvasW, canvasH, 24)
     boardImageW = canvasW
     boardImageH = canvasH
@@ -63,7 +60,6 @@ EndProcedure
 
 ; <summary>
 ; CellToScreenY
-; Visible rows only: field row #FIELD_HIDDEN.. maps to 0..
 ; </summary>
 Procedure.i CellToScreenY(row.i)
   ProcedureReturn fieldTop + (row - #FIELD_HIDDEN) * cellSize
@@ -79,7 +75,6 @@ Procedure InitBag()
     bag(i) = i
   Next
 
-  ; Fisher-Yates
   For i = #PIECE_COUNT - 1 To 1 Step -1
     j = Random(i)
     Swap bag(i), bag(j)
@@ -104,17 +99,42 @@ Procedure.i BagNext()
 EndProcedure
 
 ; <summary>
+; FillNextQueue
+; </summary>
+Procedure FillNextQueue()
+  Protected i.i
+
+  For i = 0 To #NEXT_COUNT - 1
+    nextQueue(i) = BagNext()
+  Next
+EndProcedure
+
+; <summary>
+; TakeNextPiece
+; </summary>
+Procedure.i TakeNextPiece()
+  Protected i.i
+  Protected t.i = nextQueue(0)
+
+  For i = 0 To #NEXT_COUNT - 2
+    nextQueue(i) = nextQueue(i + 1)
+  Next
+
+  nextQueue(#NEXT_COUNT - 1) = BagNext()
+
+  ProcedureReturn t
+EndProcedure
+
+; <summary>
 ; CellOccupied
 ; </summary>
 Procedure.b CellOccupied(x.i, y.i)
   If x < 0 Or x >= #FIELD_W Or y < 0 Or y >= #FIELD_H
     ProcedureReturn #True
   EndIf
-
   If field(x, y) <> #PIECE_NONE
     ProcedureReturn #True
   EndIf
-
   ProcedureReturn #False
 EndProcedure
 
@@ -159,6 +179,7 @@ EndProcedure
 
 ; <summary>
 ; ResetLock
+; Full unlock when piece leaves the ground.
 ; </summary>
 Procedure ResetLock()
   locking = #False
@@ -166,9 +187,31 @@ Procedure ResetLock()
 EndProcedure
 
 ; <summary>
+; OnGroundAction
+; Move/rotate while grounded: refresh lock delay up to LOCK_RESET_MAX.
+; </summary>
+Procedure OnGroundAction()
+  If TouchingGround() = #False
+    ResetLock()
+
+    ProcedureReturn
+  EndIf
+
+  locking = #True
+  If lockResets < #LOCK_RESET_MAX
+    lockResets + 1
+    lockAt = ElapsedMilliseconds()
+  EndIf
+EndProcedure
+
+; <summary>
 ; TouchingGround
 ; </summary>
 Procedure.b TouchingGround()
+  If curType < 0
+    ProcedureReturn #False
+  EndIf
+
   ProcedureReturn Bool(PieceFits(curType, curRot, curX, curY + 1) = #False)
 EndProcedure
 
@@ -183,9 +226,13 @@ Procedure.b TryMove(dx.i, dy.i)
   If PieceFits(curType, curRot, curX + dx, curY + dy)
     curX + dx
     curY + dy
+
     If dy = 0
+      OnGroundAction()
+    ElseIf TouchingGround() = #False
       ResetLock()
     EndIf
+
     ProcedureReturn #True
   EndIf
 
@@ -194,7 +241,6 @@ EndProcedure
 
 ; <summary>
 ; TryRotate
-; Simple wall kicks: center, L/R, up.
 ; </summary>
 Procedure.b TryRotate(dir.i)
   Protected newRot.i
@@ -219,8 +265,7 @@ Procedure.b TryRotate(dir.i)
       curRot = newRot
       curX + kickX(i)
       curY + kickY(i)
-
-      ResetLock()
+      OnGroundAction()
 
       ProcedureReturn #True
     EndIf
@@ -234,6 +279,7 @@ EndProcedure
 ; </summary>
 Procedure.i GravityMs(level.i)
   Protected ms.i = 800 - level * 70
+
   If ms < 50
     ms = 50
   EndIf
@@ -243,10 +289,10 @@ EndProcedure
 
 ; <summary>
 ; AddScoreForLines
-; Nintendo-style line clear scoring.
 ; </summary>
 Procedure AddScoreForLines(n.i)
   Protected base.i
+  Protected oldLevel.i = level
 
   Select n
     Case 1 : base = 40
@@ -263,6 +309,12 @@ Procedure AddScoreForLines(n.i)
   If score > highScore
     highScore = score
   EndIf
+
+  If level > oldLevel
+    levelFxAt = ElapsedMilliseconds()
+    levelFxLevel = level + 1
+    PlaySoundSafe(#SOUND_LEVELUP)
+  EndIf
 EndProcedure
 
 ; <summary>
@@ -276,6 +328,7 @@ Procedure.i MarkFullLines()
 
   For y = 0 To #FIELD_H - 1
     clearRow(y) = #False
+    fallDist(y) = 0
   Next
 
   For y = #FIELD_H - 1 To 0 Step -1
@@ -298,9 +351,102 @@ Procedure.i MarkFullLines()
 EndProcedure
 
 ; <summary>
-; ClearMarkedLines
+; ClearParticleFx
 ; </summary>
-Procedure ClearMarkedLines()
+Procedure ClearParticleFx()
+  particleCount = 0
+  particleFxAt = 0
+EndProcedure
+
+; <summary>
+; SpawnClearParticles
+; Burst from each cleared line.
+; </summary>
+Procedure SpawnClearParticles()
+  Protected y.i, x.i, i.i, n.i
+  Protected baseColor.i
+  Protected sx.i, sy.i
+
+  ClearParticleFx()
+  CalculateLayout()
+
+  n = 0
+  particleFxAt = ElapsedMilliseconds()
+
+  For y = 0 To #FIELD_H - 1
+    If n >= #FX_PARTICLE_MAX
+      Break
+    EndIf
+
+    If clearRow(y) = #False
+      Continue
+    EndIf
+
+    For x = 0 To #FIELD_W - 1
+      If n >= #FX_PARTICLE_MAX
+        Break
+      EndIf
+
+      If field(x, y) = #PIECE_NONE
+        Continue
+      EndIf
+
+      baseColor = PieceColor(field(x, y))
+      sx = CellToScreenX(x) + cellSize / 2
+      sy = CellToScreenY(y) + cellSize / 2
+
+      particleX(n) = sx
+      particleY(n) = sy
+      particleVx(n) = Random(13) - 6
+      particleVy(n) = Random(9) - 10
+      particleLife(n) = 500 + Random(400)
+
+      If Random(3) = 0
+        particleColor(n) = RGB(255, 255, 255)
+      Else
+        particleColor(n) = baseColor
+      EndIf
+      n + 1
+    Next
+  Next
+
+  particleCount = n
+EndProcedure
+
+; <summary>
+; PrepareLineFall
+; Compute how far each surviving row will drop, keep field until fall ends.
+; </summary>
+Procedure PrepareLineFall()
+  Protected y.i, below.i
+
+  For y = 0 To #FIELD_H - 1
+    fallDist(y) = 0
+  Next
+
+  below = 0
+
+  For y = #FIELD_H - 1 To 0 Step -1
+    If clearRow(y)
+      below + 1
+      fallDist(y) = 0
+    Else
+      fallDist(y) = below
+    EndIf
+  Next
+
+  SpawnClearParticles()
+  pendingClearScore = clearCount
+  lineFallAt = ElapsedMilliseconds()
+  gameState = #STATE_LINEFALL
+  UpdateStatus()
+EndProcedure
+
+; <summary>
+; ApplyLineClear
+; Compact field after fall animation.
+; </summary>
+Procedure ApplyLineClear()
   Protected y.i, x.i, writeY.i
   Protected Dim tmp.i(#FIELD_W - 1, #FIELD_H - 1)
 
@@ -316,6 +462,7 @@ Procedure ClearMarkedLines()
       For x = 0 To #FIELD_W - 1
         tmp(x, writeY) = field(x, y)
       Next
+
       writeY - 1
     EndIf
   Next
@@ -324,9 +471,68 @@ Procedure ClearMarkedLines()
     For x = 0 To #FIELD_W - 1
       field(x, y) = tmp(x, y)
     Next
+
+    clearRow(y) = #False
+    fallDist(y) = 0
   Next
 
+  If pendingClearScore > 0
+    AddScoreForLines(pendingClearScore)
+  EndIf
+
   clearCount = 0
+  pendingClearScore = 0
+EndProcedure
+
+; <summary>
+; StartLockFx
+; </summary>
+Procedure StartLockFx()
+  Protected i.i, cx.i, cy.i
+
+  lockFxCount = 0
+  If curType < 0
+    ProcedureReturn
+  EndIf
+
+  For i = 0 To #CELLS_PER_PIECE - 1
+    cx = curX + PieceCellX(curType, curRot, i)
+    cy = curY + PieceCellY(curType, curRot, i)
+
+    lockFxX(i) = cx
+    lockFxY(i) = cy
+    lockFxType(i) = curType
+    lockFxCount + 1
+  Next
+
+  lockFxAt = ElapsedMilliseconds()
+EndProcedure
+
+; <summary>
+; StartDropTrail
+; </summary>
+Procedure StartDropTrail(fromY.i, toY.i)
+  dropTrailAt = ElapsedMilliseconds()
+  dropTrailX = curX
+  dropTrailY0 = fromY
+  dropTrailY1 = toY
+  dropTrailType = curType
+  dropTrailRot = curRot
+EndProcedure
+
+; <summary>
+; StartSpawnWait
+; </summary>
+Procedure StartSpawnWait(afterClear.i)
+  gameState = #STATE_SPAWNWAIT
+
+  If afterClear
+    spawnWaitAt = ElapsedMilliseconds() + #SPAWN_DELAY_CLEAR_MS
+  Else
+    spawnWaitAt = ElapsedMilliseconds() + #SPAWN_DELAY_MS
+  EndIf
+
+  UpdateStatus()
 EndProcedure
 
 ; <summary>
@@ -339,6 +545,8 @@ Procedure LockPiece()
     ProcedureReturn
   EndIf
 
+  StartLockFx()
+
   For i = 0 To #CELLS_PER_PIECE - 1
     cx = curX + PieceCellX(curType, curRot, i)
     cy = curY + PieceCellY(curType, curRot, i)
@@ -350,20 +558,23 @@ Procedure LockPiece()
 
   PlaySoundSafe(#SOUND_LOCK)
   ResetLock()
+  lockResets = 0
   holdUsed = #False
   curType = #PIECE_NONE
 
   If MarkFullLines() > 0
     gameState = #STATE_LINECLEAR
     lineClearAt = ElapsedMilliseconds()
-    
+
     If clearCount >= 4
       PlaySoundSafe(#SOUND_TETRIS)
     Else
       PlaySoundSafe(#SOUND_CLEAR)
     EndIf
+
+    UpdateStatus()
   Else
-    SpawnPiece()
+    StartSpawnWait(#False)
   EndIf
 EndProcedure
 
@@ -371,16 +582,19 @@ EndProcedure
 ; SpawnPiece
 ; </summary>
 Procedure SpawnPiece()
-  curType = nextType
-  nextType = BagNext()
+  curType = TakeNextPiece()
   curRot = 0
   curX = 3
   curY = 0
+  lockResets = 0
   ResetLock()
   gravityAt = ElapsedMilliseconds()
+  gameState = #STATE_PLAYING
 
   If PieceFits(curType, curRot, curX, curY) = #False
     FinishGame()
+  Else
+    UpdateStatus()
   EndIf
 EndProcedure
 
@@ -396,11 +610,11 @@ Procedure.b HoldPiece()
 
   holdUsed = #True
   PlaySoundSafe(#SOUND_HOLD)
+  lockResets = 0
 
   If holdType = #PIECE_NONE
     holdType = curType
     curType = #PIECE_NONE
-    
     SpawnPiece()
   Else
     hSwap = holdType
@@ -409,11 +623,9 @@ Procedure.b HoldPiece()
     curRot = 0
     curX = 3
     curY = 0
-    
     ResetLock()
-    
     gravityAt = ElapsedMilliseconds()
-    
+
     If PieceFits(curType, curRot, curX, curY) = #False
       FinishGame()
     EndIf
@@ -432,11 +644,11 @@ Procedure SoftDropStep()
 
   If TryMove(0, 1)
     score + 1
-    
+
     If score > highScore
       highScore = score
     EndIf
-    
+
     gravityAt = ElapsedMilliseconds()
   Else
     LockPiece()
@@ -449,21 +661,27 @@ EndProcedure
 Procedure HardDrop()
   Protected gy.i
   Protected dropped.i
+  Protected fromY.i
 
   If curType < 0 Or gameState <> #STATE_PLAYING
     ProcedureReturn
   EndIf
 
+  fromY = curY
   gy = GhostDropY()
-  
   dropped = gy - curY
+
+  If dropped > 0
+    StartDropTrail(fromY, gy)
+  EndIf
+
   curY = gy
   score + dropped * 2
-  
+
   If score > highScore
     highScore = score
   EndIf
-  
+
   LockPiece()
 EndProcedure
 
@@ -474,9 +692,8 @@ Procedure FinishGame()
   gameState = #STATE_GAMEOVER
   resultFxAt = ElapsedMilliseconds()
   curType = #PIECE_NONE
-  
   PlaySoundSafe(#SOUND_GAMEOVER)
-  
+
   If score > highScore
     highScore = score
   EndIf
@@ -484,15 +701,3 @@ Procedure FinishGame()
   SavePrefs()
   UpdateStatus()
 EndProcedure
-
-; IDE Options = PureBasic 6.40 (Windows - x64)
-; CursorPosition = 462
-; FirstLine = 420
-; Folding = -----
-; Optimizer
-; EnableAsm
-; EnableXP
-; DPIAware
-; EnableOnError
-; DisableDebugger
-; CompileSourceDirectory
