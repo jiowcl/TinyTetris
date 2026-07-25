@@ -8,24 +8,28 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2026-07-25 22:28" user="使用者" host="DESKTOP-K1RBCTS"/>
+    <lastopen date="2026-07-26 00:22" user="使用者" host="DESKTOP-K1RBCTS"/>
   </section>
   <section name="files">
     <file name="TinyTetris.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="+"/>
-      <fingerprint md5="618de8002f83b9082f6aa7fc8bad3ae0"/>
+      <fingerprint md5="6a32d6d08ee4b5ed06962a95122f2fc7"/>
     </file>
     <file name="Core\Enums.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
-      <fingerprint md5="d3f43e4ae6abc1d041d55676ced5a9b3"/>
+      <fingerprint md5="a0bf10dbdb954c6a1a24a557eadbca9e"/>
     </file>
     <file name="Core\Globals.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
-      <fingerprint md5="3f250841d4d2e7252aa26186d016ad78"/>
+      <fingerprint md5="5c1fe062db42ac52fc95524d4932a584"/>
     </file>
     <file name="Core\Helpers.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
-      <fingerprint md5="0f928f735757f28bad783b3dd9060fde"/>
+      <fingerprint md5="b738ac02f4bf137e45e0391268ff5d41"/>
+    </file>
+    <file name="Core\Music.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" sortindex="2" panelstate="++"/>
+      <fingerprint md5="2bfbae2cfdf3cf02e2399916b047ba3a"/>
     </file>
     <file name="Core\Pieces.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
@@ -33,19 +37,19 @@
     </file>
     <file name="Core\Board.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
-      <fingerprint md5="1f7b8a1615a28dba44a9a79e24d6a5f5"/>
+      <fingerprint md5="2b31d20588d954ba5d3084608888be94"/>
     </file>
     <file name="Core\Drawing.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
-      <fingerprint md5="e68d90e1259aca4bd540a0773fea4e04"/>
+      <fingerprint md5="c39feb61e27905775d50168a4ecaf9dd"/>
     </file>
     <file name="Core\Game.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
-      <fingerprint md5="e2041f361b7ad7947443fd9b58589f45"/>
+      <fingerprint md5="9ad28093c84b40151615d1916c19ec8b"/>
     </file>
     <file name="Core\Input.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
-      <fingerprint md5="967b31e7c0fea0c0ad197737bde95b59"/>
+      <fingerprint md5="c9910b0ace4ea87102adbc96fbd0c77a"/>
     </file>
   </section>
   <section name="targets">
@@ -57,12 +61,12 @@
       <options asm="1" thread="1" xpskin="1" dpiaware="1" dllprotection="1" onerror="1" optimizer="1"/>
       <temporaryexe value="source"/>
       <versioninfo enable="1">
-        <field0 value="1.1.0.0"/>
-        <field1 value="1.1.0.0"/>
+        <field0 value="1.2.0.0"/>
+        <field1 value="1.2.0.0"/>
         <field2 value="Inwazy Technology"/>
         <field3 value="TinyTetris"/>
-        <field4 value="1.1"/>
-        <field5 value="1.1"/>
+        <field4 value="1.2"/>
+        <field5 value="1.2"/>
         <field6 value="A Tiny Tetris Game Written in PureBasic"/>
         <field7 value="TinyTetris"/>
         <field8 value="TinyTetris"/>

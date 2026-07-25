@@ -25,6 +25,13 @@ Global pendingClearScore.i = 0
 
 Global gameState.i = #STATE_PLAYING
 Global soundEnabled.i = #True
+Global musicEnabled.i = #True
+Global musicVolume.i = #MUSIC_VOLUME_DEFAULT
+Global musicLoaded.i = #False
+Global musicPlaying.i = #False
+Global musicPaused.i = #False
+Global musicFadeAt.i = 0
+Global musicFadeFrom.i = 0
 
 Global gravityAt.i = 0
 Global lockAt.i = 0

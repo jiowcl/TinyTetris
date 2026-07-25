@@ -31,7 +31,7 @@ Module features require PureBasic 5.20 and above. Enable Unicode and save source
 | P | Pause |
 | R | Restart |
 
-Buttons: **Restart**, **Pause**, **Sound**. High score and sound preference are stored in `TinyTetris.ini` next to the executable.
+Buttons: **Restart**, **Pause**, **Sound**, **Music**. Preferences (SFX, BGM, high score, DAS) are stored in `TinyTetris.ini` next to the executable.
 
 ## Features
 
@@ -44,12 +44,14 @@ Buttons: **Restart**, **Pause**, **Sound**. High score and sound preference are 
 - Line-clear flash → stack fall animation → spawn delay
 - Clear particles, level-up banner
 - Nintendo-style scoring and level speed-up
-- Optional WAV cues under `TinyTetris/Sound/`
+- Optional WAV SFX + tracker BGM (`bgm.xm` / `.it` / `.mod` / `.wav` under `Sound/`)
+- Music pause-duck and game-over fade-out; missing BGM file is skipped safely
 
 ## License
 
 Copyright (c) 2026 Ji-Feng Tsai.  
 Copyright (c) 効果音ラボ.  
+Copyright (c) PANICPUMPKIN.  
 Code released under the MIT license.  
 
 ## Donation  

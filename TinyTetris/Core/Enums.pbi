@@ -3,8 +3,8 @@
 ;  Code released under the MIT license.
 ;--------------------------------------------------------------------------------------------
 
-#APP_VERSION$     = "1.1"
-#VERSION          = 1.1
+#APP_VERSION$     = "1.2"
+#VERSION          = 1.2
 
 ; Playfield (2 hidden rows above for spawn)
 #FIELD_W          = 10
@@ -40,9 +40,10 @@
 #BTN_RESTART      = 2
 #BTN_PAUSE        = 3
 #CHK_SOUND        = 4
-#LBL_STATUS       = 5
-#LBL_VERSION      = 6
-#LBL_HELP         = 7
+#CHK_MUSIC        = 5
+#LBL_STATUS       = 6
+#LBL_VERSION      = 7
+#LBL_HELP         = 8
 
 ; Canvas
 #CANVAS_DEFAULT_W = 420
@@ -87,6 +88,13 @@
 #SOUND_LEVELUP    = 106
 #SOUND_GAMEOVER   = 200
 
+; Music (tracker module via ModPlug)
+; From: https://pansound.com/panicpumpkin/music/hageshii.html 
+#MUSIC_BGM            = 0
+#MUSIC_VOLUME_DEFAULT = 50
+#MUSIC_PAUSE_VOLUME   = 12
+#MUSIC_FADE_MS        = 700
+
 ; Effects
 #FX_PARTICLE_MAX  = 48
 #FX_PARTICLE_MS   = 900
@@ -108,6 +116,19 @@ Declare ApplyPrefsToUi()
 Declare SavePrefs()
 Declare PlaySoundSafe(soundId.i)
 Declare UpdateStatus()
+
+Declare.s ResolveAssetPath(fileName.s)
+Declare.b TryLoadBgmFile(fileName.s)
+Declare.b InitBgm()
+Declare FreeBgm()
+Declare ApplyMusicVolume(vol.i)
+Declare StartBgm()
+Declare StopBgm()
+Declare PauseBgm()
+Declare ResumeBgm()
+Declare FadeOutBgm()
+Declare MusicTick()
+Declare SyncMusicUi()
 
 Declare InitPieceData()
 Declare.i PieceColor(type.i)
@@ -173,3 +194,14 @@ Declare InitGame()
 Declare RestartGame()
 Declare TogglePause()
 Declare GameTick()
+
+; IDE Options = PureBasic 6.40 (Windows - x64)
+; CursorPosition = 91
+; FirstLine = 54
+; Optimizer
+; EnableAsm
+; EnableXP
+; DPIAware
+; EnableOnError
+; DisableDebugger
+; CompileSourceDirectory

@@ -118,6 +118,7 @@ Procedure LoadUIFont()
     SetGadgetFont(#BTN_RESTART, FontID(uiFont))
     SetGadgetFont(#BTN_PAUSE, FontID(uiFont))
     SetGadgetFont(#CHK_SOUND, FontID(uiFont))
+    SetGadgetFont(#CHK_MUSIC, FontID(uiFont))
     SetGadgetFont(#LBL_VERSION, FontID(uiFont))
     SetGadgetFont(#LBL_HELP, FontID(uiFont))
   EndIf
@@ -164,6 +165,8 @@ Procedure LoadPrefs()
 
   PreferenceGroup("Audio")
   soundEnabled = ReadPreferenceInteger("Enabled", 1)
+  musicEnabled = ReadPreferenceInteger("MusicEnabled", 1)
+  musicVolume = ReadPreferenceInteger("MusicVolume", #MUSIC_VOLUME_DEFAULT)
 
   PreferenceGroup("Score")
   highScore = ReadPreferenceInteger("HighScore", 0)
@@ -180,10 +183,17 @@ Procedure LoadPrefs()
     soundEnabled = #False
   EndIf
 
+  If musicEnabled <> 0
+    musicEnabled = #True
+  Else
+    musicEnabled = #False
+  EndIf
+
   If highScore < 0
     highScore = 0
   EndIf
 
+  musicVolume = ClampI(musicVolume, 0, 100)
   dasDelayMs = ClampI(dasDelayMs, 80, 400)
   dasRepeatMs = ClampI(dasRepeatMs, 16, 120)
 EndProcedure
@@ -193,6 +203,7 @@ EndProcedure
 ; </summary>
 Procedure ApplyPrefsToUi()
   SetGadgetState(#CHK_SOUND, soundEnabled)
+  SyncMusicUi()
 EndProcedure
 
 ; <summary>
@@ -203,12 +214,23 @@ Procedure SavePrefs()
     soundEnabled = GetGadgetState(#CHK_SOUND)
   EndIf
 
+  If IsGadget(#CHK_MUSIC) And musicLoaded
+    musicEnabled = GetGadgetState(#CHK_MUSIC)
+  EndIf
+
   If soundEnabled <> 0
     soundEnabled = #True
   Else
     soundEnabled = #False
   EndIf
 
+  If musicEnabled <> 0
+    musicEnabled = #True
+  Else
+    musicEnabled = #False
+  EndIf
+
+  musicVolume = ClampI(musicVolume, 0, 100)
   dasDelayMs = ClampI(dasDelayMs, 80, 400)
   dasRepeatMs = ClampI(dasRepeatMs, 16, 120)
 
@@ -218,6 +240,8 @@ Procedure SavePrefs()
 
   PreferenceGroup("Audio")
   WritePreferenceInteger("Enabled", soundEnabled)
+  WritePreferenceInteger("MusicEnabled", musicEnabled)
+  WritePreferenceInteger("MusicVolume", musicVolume)
 
   PreferenceGroup("Score")
   WritePreferenceInteger("HighScore", highScore)

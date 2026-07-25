@@ -693,6 +693,7 @@ Procedure FinishGame()
   resultFxAt = ElapsedMilliseconds()
   curType = #PIECE_NONE
   PlaySoundSafe(#SOUND_GAMEOVER)
+  FadeOutBgm()
 
   If score > highScore
     highScore = score

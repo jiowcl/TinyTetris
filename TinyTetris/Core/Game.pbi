@@ -52,12 +52,14 @@ Procedure InitGame()
   SpawnPiece()
   gravityAt = ElapsedMilliseconds()
   UpdateStatus()
+  StartBgm()
 EndProcedure
 
 ; <summary>
 ; RestartGame
 ; </summary>
 Procedure RestartGame()
+  StopBgm()
   InitGame()
   SetGadgetText(#BTN_PAUSE, "Pause")
   DrawBoard()
@@ -70,6 +72,7 @@ EndProcedure
 Procedure TogglePause()
   If gameState = #STATE_PLAYING
     gameState = #STATE_PAUSED
+    PauseBgm()
     SetGadgetText(#BTN_PAUSE, "Resume")
     UpdateStatus()
     DrawBoard()
@@ -77,6 +80,7 @@ Procedure TogglePause()
     gameState = #STATE_PLAYING
     gravityAt = ElapsedMilliseconds()
     ResetLock()
+    ResumeBgm()
     SetGadgetText(#BTN_PAUSE, "Pause")
     UpdateStatus()
     DrawBoard()
@@ -92,6 +96,7 @@ Procedure GameTick()
   Protected now.i = ElapsedMilliseconds()
 
   InputTick()
+  MusicTick()
 
   Select gameState
     Case #STATE_LINECLEAR

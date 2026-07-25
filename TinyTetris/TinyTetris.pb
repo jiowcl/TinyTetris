@@ -19,6 +19,7 @@ RandomSeed(ElapsedMilliseconds())
 IncludeFile "./Core/Enums.pbi"
 IncludeFile "./Core/Globals.pbi"
 IncludeFile "./Core/Helpers.pbi"
+IncludeFile "./Core/Music.pbi"
 IncludeFile "./Core/Pieces.pbi"
 IncludeFile "./Core/Board.pbi"
 IncludeFile "./Core/Drawing.pbi"
@@ -32,8 +33,10 @@ If OpenWindow(#WIN_MAIN, #PB_Ignore, #PB_Ignore, 450, 680, "TinyTetris " + #APP_
   ButtonGadget(#BTN_RESTART, 15, 545, 200, 35, "Restart")
   ButtonGadget(#BTN_PAUSE, 225, 545, 210, 35, "Pause")
 
-  CheckBoxGadget(#CHK_SOUND, 15, 588, 100, 24, "Sound")
+  CheckBoxGadget(#CHK_SOUND, 15, 588, 80, 24, "Sound")
   SetGadgetState(#CHK_SOUND, #True)
+  CheckBoxGadget(#CHK_MUSIC, 100, 588, 80, 24, "Music")
+  SetGadgetState(#CHK_MUSIC, #True)
   TextGadget(#LBL_VERSION, 300, 590, 135, 20, "v" + #APP_VERSION$, #PB_Text_Right)
 
   TextGadget(#LBL_HELP, 15, 618, 420, 20, "Left/Right move  Up/X rotate  Z CCW  Down soft  Space hard  C hold  P pause")
@@ -41,6 +44,7 @@ If OpenWindow(#WIN_MAIN, #PB_Ignore, #PB_Ignore, 450, 680, "TinyTetris " + #APP_
 
   LoadUIFont()
   LoadPrefs()
+  InitBgm()
   ApplyPrefsToUi()
   SyncCanvasSize()
   BindGadgetEvent(#CANVAS, @CanvasGadgetEvent())
@@ -71,11 +75,29 @@ If OpenWindow(#WIN_MAIN, #PB_Ignore, #PB_Ignore, 450, 680, "TinyTetris " + #APP_
             soundEnabled = GetGadgetState(#CHK_SOUND)
             SavePrefs()
             FocusCanvas()
+
+          Case #CHK_MUSIC
+            If musicLoaded
+              musicEnabled = GetGadgetState(#CHK_MUSIC)
+              SavePrefs()
+              If musicEnabled
+                If gameState = #STATE_PAUSED
+                  StartBgm()
+                  PauseBgm()
+                ElseIf gameState <> #STATE_GAMEOVER
+                  StartBgm()
+                EndIf
+              Else
+                StopBgm()
+              EndIf
+            EndIf
+            FocusCanvas()
         EndSelect
     EndSelect
   ForEver
 
   SavePrefs()
+  FreeBgm()
 
   If boardImage <> -1
     FreeImage(boardImage)
