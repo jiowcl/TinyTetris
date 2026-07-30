@@ -5,7 +5,7 @@ A tiny Tetris game written in PureBasic.
 ![PureBasic](https://img.shields.io/badge/language-PureBasic-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 
-![Screenshot](https://github.com/jiowcl/TinyTetris/blob/main/Screenshot/Demo1.png?raw=true)
+![Screenshot](./Screenshot/Demo1.png)
 
 ## Environment
 
