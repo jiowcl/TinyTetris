@@ -53,6 +53,6 @@ jobs:
         if (Test-Path "TinyTetris.exe") {
             Write-Host "The Test Program Compiled Successfully!"
         } else {
-            Write-Error "Compilation Failed; DllVersion.exe was not Generated."
+            Write-Error "Compilation Failed; TinyTetris.exe was not Generated."
             exit 1
         }
