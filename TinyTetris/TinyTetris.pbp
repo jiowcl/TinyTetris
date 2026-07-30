@@ -8,9 +8,13 @@
   <section name="data">
     <explorer view="C:\ProgramData\PureBasic\Examples\" pattern="0"/>
     <log show="1"/>
-    <lastopen date="2026-07-26 00:22" user="使用者" host="DESKTOP-K1RBCTS"/>
+    <lastopen date="2026-07-30 11:55" user="Fred" host="DESKTOP-AMI620D"/>
   </section>
   <section name="files">
+    <file name="Core\Music.pbi">
+      <config load="0" scan="1" panel="1" warn="1" lastopen="1" sortindex="1" panelstate="++"/>
+      <fingerprint md5="2bfbae2cfdf3cf02e2399916b047ba3a"/>
+    </file>
     <file name="TinyTetris.pb">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="+"/>
       <fingerprint md5="6a32d6d08ee4b5ed06962a95122f2fc7"/>
@@ -26,10 +30,6 @@
     <file name="Core\Helpers.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
       <fingerprint md5="b738ac02f4bf137e45e0391268ff5d41"/>
-    </file>
-    <file name="Core\Music.pbi">
-      <config load="0" scan="1" panel="1" warn="1" lastopen="1" sortindex="2" panelstate="++"/>
-      <fingerprint md5="2bfbae2cfdf3cf02e2399916b047ba3a"/>
     </file>
     <file name="Core\Pieces.pbi">
       <config load="0" scan="1" panel="1" warn="1" lastopen="0" sortindex="999" panelstate="++"/>
@@ -60,6 +60,7 @@
       <executable value="Output\TinyTetris.exe"/>
       <options asm="1" thread="1" xpskin="1" dpiaware="1" dllprotection="1" onerror="1" optimizer="1"/>
       <temporaryexe value="source"/>
+      <icon enable="1">logo.ico</icon>
       <versioninfo enable="1">
         <field0 value="1.2.0.0"/>
         <field1 value="1.2.0.0"/>

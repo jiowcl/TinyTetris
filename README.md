@@ -54,6 +54,8 @@ Copyright (c) 効果音ラボ.
 Copyright (c) PANICPUMPKIN.  
 Code released under the MIT license.  
 
+Icon: [AI Icon Generator](https://perchance.org/ai-icon-generator)  
+
 ## Donation  
 
 If this application help you reduce time to coding, you can give me a cup of coffee :)
