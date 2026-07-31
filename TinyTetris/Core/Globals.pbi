@@ -21,7 +21,17 @@ Global score.i = 0
 Global highScore.i = 0
 Global level.i = 0
 Global lines.i = 0
-Global pendingClearScore.i = 0
+Global pendingLines.i = 0
+Global pendingTSpin.i = #TSPIN_NONE
+Global backToBack.i = #False
+Global comboCount.i = 0
+Global lastAction.i = #ACTION_NONE
+Global lastKickIndex.i = 0
+Global kickDX.i = 0
+Global kickDY.i = 0
+
+Global clearMsg.s = ""
+Global clearMsgAt.i = 0
 
 Global gameState.i = #STATE_PLAYING
 Global soundEnabled.i = #True
@@ -32,6 +42,7 @@ Global musicPlaying.i = #False
 Global musicPaused.i = #False
 Global musicFadeAt.i = 0
 Global musicFadeFrom.i = 0
+Global settingsOpen.i = #False
 
 Global gravityAt.i = 0
 Global lockAt.i = 0

@@ -7,6 +7,12 @@
 ; DrawCell
 ; Beveled block with rim highlight.
 ; </summary>
+; <param name="sx">integer</param>
+; <param name="sy">integer</param>
+; <param name="size">integer</param>
+; <param name="color">integer</param>
+; <param name="alpha">string</param>
+; <returns>Returns void.</returns>
 Procedure DrawCell(sx.i, sy.i, size.i, color.i, alpha.i)
   Protected r.i = Red(color)
   Protected g.i = Green(color)
@@ -40,6 +46,12 @@ EndProcedure
 ; <summary>
 ; DrawPieceAt
 ; </summary>
+; <param name="type">integer</param>
+; <param name="rot">integer</param>
+; <param name="px">integer</param>
+; <param name="py">integer</param>
+; <param name="alpha">string</param>
+; <returns>Returns void.</returns>
 Procedure DrawPieceAt(type.i, rot.i, px.i, py.i, alpha.i)
   Protected i.i, cx.i, cy.i, sx.i, sy.i
   Protected color.i
@@ -69,6 +81,12 @@ EndProcedure
 ; <summary>
 ; DrawMiniPiece
 ; </summary>
+; <param name="type">integer</param>
+; <param name="ox">integer</param>
+; <param name="oy">integer</param>
+; <param name="size">integer</param>
+; <param name="alpha">string</param>
+; <returns>Returns void.</returns>
 Procedure DrawMiniPiece(type.i, ox.i, oy.i, size.i, alpha.i)
   Protected i.i, cx.i, cy.i
   Protected minX.i = 3, minY.i = 3, maxX.i = 0, maxY.i = 0
@@ -102,6 +120,12 @@ EndProcedure
 ; <summary>
 ; DrawPanelBox
 ; </summary>
+; <param name="x">integer</param>
+; <param name="y">integer</param>
+; <param name="w">integer</param>
+; <param name="h">integer</param>
+; <param name="title">string</param>
+; <returns>Returns void.</returns>
 Procedure DrawPanelBox(x.i, y.i, w.i, h.i, title.s)
   DrawingMode(#PB_2DDrawing_AlphaBlend)
   Box(x, y, w, h, RGBA(20, 28, 40, 220))
@@ -245,6 +269,50 @@ Procedure DrawParticles()
     Circle(sx, sy, r + 1, RGBA(cr, cg, cb, alpha / 3))
     Circle(sx, sy, r, RGBA(cr, cg, cb, alpha))
   Next
+  DrawingMode(#PB_2DDrawing_Default)
+EndProcedure
+
+; <summary>
+; DrawClearMsg
+; </summary>
+Procedure DrawClearMsg()
+  Protected elapsed.i
+  Protected alpha.i, rise.i
+  Protected fw.i, fh.i
+  Protected label.s
+
+  If clearMsgAt = 0 Or clearMsg = ""
+    ProcedureReturn
+  EndIf
+
+  elapsed = ElapsedMilliseconds() - clearMsgAt
+  If elapsed >= #FX_CLEAR_MSG_MS
+    clearMsgAt = 0
+    ProcedureReturn
+  EndIf
+
+  If elapsed < 200
+    alpha = elapsed * 255 / 200
+  ElseIf elapsed > #FX_CLEAR_MSG_MS - 250
+    alpha = (#FX_CLEAR_MSG_MS - elapsed) * 255 / 250
+  Else
+    alpha = 255
+  EndIf
+  rise = (200 - MinI(200, elapsed)) * 10 / 200
+
+  fw = #FIELD_W * cellSize
+  fh = #FIELD_VISIBLE_H * cellSize
+  label = clearMsg
+
+  DrawingMode(#PB_2DDrawing_Transparent)
+  If panelFont
+    DrawingFont(FontID(panelFont))
+  EndIf
+  DrawingMode(#PB_2DDrawing_AlphaBlend)
+  FrontColor(RGBA(0, 0, 0, alpha * 160 / 255))
+  DrawText(fieldLeft + (fw - TextWidth(label)) / 2 + 2, fieldTop + fh / 4 + rise + 2, label)
+  FrontColor(RGBA(255, 230, 120, alpha))
+  DrawText(fieldLeft + (fw - TextWidth(label)) / 2, fieldTop + fh / 4 + rise, label)
   DrawingMode(#PB_2DDrawing_Default)
 EndProcedure
 
@@ -458,7 +526,7 @@ Procedure DrawBoardContent()
   Next
 
   ; Stats
-  DrawPanelBox(sideX, fieldTop + nextH + 8, 86, 140, "STATS")
+  DrawPanelBox(sideX, fieldTop + nextH + 8, 86, 175, "STATS")
   DrawingMode(#PB_2DDrawing_Transparent)
 
   If panelFont
@@ -478,11 +546,21 @@ Procedure DrawBoardContent()
   FrontColor(RGB(160, 255, 180))
   DrawText(sideX + 8, fieldTop + nextH + 142, Str(lines))
 
-  DrawPanelBox(sideX, fieldTop + nextH + 156, 86, 60, "BEST")
+  If backToBack
+    FrontColor(RGB(255, 170, 90))
+    DrawText(sideX + 8, fieldTop + nextH + 162, "B2B")
+  EndIf
+  If comboCount > 0
+    FrontColor(RGB(255, 140, 200))
+    DrawText(sideX + 48, fieldTop + nextH + 162, "x" + Str(comboCount))
+  EndIf
+
+  DrawPanelBox(sideX, fieldTop + nextH + 192, 86, 55, "BEST")
   FrontColor(RGB(255, 200, 140))
-  DrawText(sideX + 8, fieldTop + nextH + 186, Str(highScore))
+  DrawText(sideX + 8, fieldTop + nextH + 220, Str(highScore))
   DrawingMode(#PB_2DDrawing_Default)
 
+  DrawClearMsg()
   DrawLevelFx()
 
   If gameState = #STATE_PAUSED
@@ -582,6 +660,10 @@ Procedure.b EffectsActive()
   EndIf
 
   If levelFxAt > 0 And (now - levelFxAt) < #FX_LEVEL_MS
+    ProcedureReturn #True
+  EndIf
+
+  If clearMsgAt > 0 And (now - clearMsgAt) < #FX_CLEAR_MSG_MS
     ProcedureReturn #True
   EndIf
 

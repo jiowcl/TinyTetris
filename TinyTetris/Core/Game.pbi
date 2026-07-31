@@ -19,7 +19,8 @@ Procedure ClearField()
   Next
 
   clearCount = 0
-  pendingClearScore = 0
+  pendingLines = 0
+  pendingTSpin = #TSPIN_NONE
 EndProcedure
 
 ; <summary>
@@ -44,6 +45,12 @@ Procedure InitGame()
   dropTrailAt = 0
   levelFxAt = 0
   lockResets = 0
+  backToBack = #False
+  comboCount = 0
+  lastAction = #ACTION_NONE
+  lastKickIndex = 0
+  clearMsg = ""
+  clearMsgAt = 0
   ClearParticleFx()
   ResetLock()
 

@@ -6,6 +6,9 @@
 ; <summary>
 ; MinI
 ; </summary>
+; <param name="a">integer</param>
+; <param name="b">integer</param>
+; <returns>Returns integer.</returns>
 Procedure.i MinI(a.i, b.i)
   If a < b
     ProcedureReturn a
@@ -17,6 +20,9 @@ EndProcedure
 ; <summary>
 ; MaxI
 ; </summary>
+; <param name="a">integer</param>
+; <param name="b">integer</param>
+; <returns>Returns integer.</returns>
 Procedure.i MaxI(a.i, b.i)
   If a > b
     ProcedureReturn a
@@ -28,6 +34,10 @@ EndProcedure
 ; <summary>
 ; ClampI
 ; </summary>
+; <param name="v">integer</param>
+; <param name="lo">integer</param>
+; <param name="hi">integer</param>
+; <returns>Returns integer.</returns>
 Procedure.i ClampI(v.i, lo.i, hi.i)
   If v < lo
     ProcedureReturn lo
@@ -43,6 +53,8 @@ EndProcedure
 ; <summary>
 ; EaseOutQuad100
 ; </summary>
+; <param name="t">integer</param>
+; <returns>Returns integer.</returns>
 Procedure.i EaseOutQuad100(t.i)
   Protected u.i
 
@@ -50,12 +62,15 @@ Procedure.i EaseOutQuad100(t.i)
   If t >= 100 : ProcedureReturn 100 : EndIf
 
   u = 100 - t
+
   ProcedureReturn 100 - (u * u) / 100
 EndProcedure
 
 ; <summary>
 ; EaseInQuad100
 ; </summary>
+; <param name="t">integer</param>
+; <returns>Returns integer.</returns>
 Procedure.i EaseInQuad100(t.i)
   If t <= 0 : ProcedureReturn 0 : EndIf
   If t >= 100 : ProcedureReturn 100 : EndIf
@@ -66,6 +81,8 @@ EndProcedure
 ; <summary>
 ; PlaySoundSafe
 ; </summary>
+; <param name="soundId">integer</param>
+; <returns>Returns void.</returns>
 Procedure PlaySoundSafe(soundId.i)
   If soundEnabled = #False
     ProcedureReturn
@@ -77,24 +94,66 @@ Procedure PlaySoundSafe(soundId.i)
 EndProcedure
 
 ; <summary>
+; ClearKindText
+; </summary>
+; <param name="n">integer</param>
+; <param name="tspin">integer</param>
+; <returns>Returns string.</returns>
+Procedure.s ClearKindText(n.i, tspin.i)
+  Protected t.s
+
+  If tspin = #TSPIN_FULL
+    Select n
+      Case 0 : t = "T-SPIN"
+      Case 1 : t = "T-SPIN SINGLE"
+      Case 2 : t = "T-SPIN DOUBLE"
+      Case 3 : t = "T-SPIN TRIPLE"
+      Default : t = "T-SPIN"
+    EndSelect
+  ElseIf tspin = #TSPIN_MINI
+    Select n
+      Case 0 : t = "T-SPIN MINI"
+      Case 1 : t = "T-SPIN MINI SINGLE"
+      Case 2 : t = "T-SPIN MINI DOUBLE"
+      Default : t = "T-SPIN MINI"
+    EndSelect
+  Else
+    Select n
+      Case 1 : t = "SINGLE"
+      Case 2 : t = "DOUBLE"
+      Case 3 : t = "TRIPLE"
+      Case 4 : t = "TETRIS"
+      Default : t = ""
+    EndSelect
+  EndIf
+
+  ProcedureReturn t
+EndProcedure
+
+; <summary>
 ; UpdateStatus
 ; </summary>
 Procedure UpdateStatus()
+  Protected msg.s
+
   Select gameState
-    Case #STATE_PLAYING
-      SetGadgetText(#LBL_STATUS, "Playing — Level " + Str(level + 1))
+    Case #STATE_PLAYING, #STATE_SPAWNWAIT
+      msg = "Level " + Str(level + 1)
+      If backToBack
+        msg + "  B2B"
+      EndIf
+      If comboCount > 0
+        msg + "  Combo x" + Str(comboCount)
+      EndIf
+      SetGadgetText(#LBL_STATUS, msg)
     Case #STATE_PAUSED
       SetGadgetText(#LBL_STATUS, "Paused")
-    Case #STATE_LINECLEAR
-      If clearCount >= 4
-        SetGadgetText(#LBL_STATUS, "Tetris!")
+    Case #STATE_LINECLEAR, #STATE_LINEFALL
+      If clearMsg <> ""
+        SetGadgetText(#LBL_STATUS, clearMsg)
       Else
-        SetGadgetText(#LBL_STATUS, "Line Clear ×" + Str(clearCount))
+        SetGadgetText(#LBL_STATUS, "Line Clear")
       EndIf
-    Case #STATE_LINEFALL
-      SetGadgetText(#LBL_STATUS, "Stack Drop")
-    Case #STATE_SPAWNWAIT
-      SetGadgetText(#LBL_STATUS, "Playing — Level " + Str(level + 1))
     Case #STATE_GAMEOVER
       SetGadgetText(#LBL_STATUS, "Game Over — Score " + Str(score))
   EndSelect
@@ -117,6 +176,7 @@ Procedure LoadUIFont()
   If uiFont
     SetGadgetFont(#BTN_RESTART, FontID(uiFont))
     SetGadgetFont(#BTN_PAUSE, FontID(uiFont))
+    SetGadgetFont(#BTN_SETTINGS, FontID(uiFont))
     SetGadgetFont(#CHK_SOUND, FontID(uiFont))
     SetGadgetFont(#CHK_MUSIC, FontID(uiFont))
     SetGadgetFont(#LBL_VERSION, FontID(uiFont))

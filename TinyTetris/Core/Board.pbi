@@ -54,6 +54,8 @@ EndProcedure
 ; <summary>
 ; CellToScreenX
 ; </summary>
+; <param name="col">integer</param>
+; <returns>Returns integer.</returns>
 Procedure.i CellToScreenX(col.i)
   ProcedureReturn fieldLeft + col * cellSize
 EndProcedure
@@ -61,6 +63,8 @@ EndProcedure
 ; <summary>
 ; CellToScreenY
 ; </summary>
+; <param name="row">integer</param>
+; <returns>Returns integer.</returns>
 Procedure.i CellToScreenY(row.i)
   ProcedureReturn fieldTop + (row - #FIELD_HIDDEN) * cellSize
 EndProcedure
@@ -128,6 +132,9 @@ EndProcedure
 ; <summary>
 ; CellOccupied
 ; </summary>
+; <param name="x">integer</param>
+; <param name="y">integer</param>
+; <returns>Returns byte.</returns>
 Procedure.b CellOccupied(x.i, y.i)
   If x < 0 Or x >= #FIELD_W Or y < 0 Or y >= #FIELD_H
     ProcedureReturn #True
@@ -141,6 +148,11 @@ EndProcedure
 ; <summary>
 ; PieceFits
 ; </summary>
+; <param name="type">integer</param>
+; <param name="rot">integer</param>
+; <param name="px">integer</param>
+; <param name="py">integer</param>
+; <returns>Returns byte.</returns>
 Procedure.b PieceFits(type.i, rot.i, px.i, py.i)
   Protected i.i, cx.i, cy.i
 
@@ -218,6 +230,9 @@ EndProcedure
 ; <summary>
 ; TryMove
 ; </summary>
+; <param name="dx">integer</param>
+; <param name="dy">integer</param>
+; <returns>Returns byte.</returns>
 Procedure.b TryMove(dx.i, dy.i)
   If curType < 0
     ProcedureReturn #False
@@ -226,6 +241,7 @@ Procedure.b TryMove(dx.i, dy.i)
   If PieceFits(curType, curRot, curX + dx, curY + dy)
     curX + dx
     curY + dy
+    lastAction = #ACTION_MOVE
 
     If dy = 0
       OnGroundAction()
@@ -241,32 +257,35 @@ EndProcedure
 
 ; <summary>
 ; TryRotate
+; SRS wall kicks (JLSTZ / I).
 ; </summary>
+; <param name="dir">integer</param>
+; <returns>Returns byte.</returns>
 Procedure.b TryRotate(dir.i)
   Protected newRot.i
   Protected i.i
-  Protected Dim kickX.i(4)
-  Protected Dim kickY.i(4)
+  Protected fromRot.i
 
   If curType < 0 Or curType = #PIECE_O
     ProcedureReturn #False
   EndIf
 
-  newRot = NormRot(curRot + dir)
+  If dir <> 1 And dir <> -1
+    ProcedureReturn #False
+  EndIf
 
-  kickX(0) = 0 : kickY(0) = 0
-  kickX(1) = -1 : kickY(1) = 0
-  kickX(2) = 1 : kickY(2) = 0
-  kickX(3) = 0 : kickY(3) = -1
-  kickX(4) = 0 : kickY(4) = 1
+  fromRot = curRot
+  newRot = NormRot(fromRot + dir)
 
-  For i = 0 To 4
-    If PieceFits(curType, newRot, curX + kickX(i), curY + kickY(i))
+  For i = 0 To #SRS_KICK_TESTS - 1
+    FillSrsKick(curType, fromRot, dir, i)
+    If PieceFits(curType, newRot, curX + kickDX, curY + kickDY)
       curRot = newRot
-      curX + kickX(i)
-      curY + kickY(i)
+      curX + kickDX
+      curY + kickDY
+      lastAction = #ACTION_ROTATE
+      lastKickIndex = i
       OnGroundAction()
-
       ProcedureReturn #True
     EndIf
   Next
@@ -275,8 +294,64 @@ Procedure.b TryRotate(dir.i)
 EndProcedure
 
 ; <summary>
+; DetectTSpin
+; 3-corner rule + Mini/Full; kick #5 forces Full.
+; </summary>
+Procedure.i DetectTSpin()
+  Protected cx.i, cy.i
+  Protected c00.i, c20.i, c02.i, c22.i
+  Protected filled.i
+  Protected frontA.i, frontB.i
+
+  If curType <> #PIECE_T Or lastAction <> #ACTION_ROTATE
+    ProcedureReturn #TSPIN_NONE
+  EndIf
+
+  cx = curX + 1
+  cy = curY + 1
+  c00 = Bool(CellOccupied(cx - 1, cy - 1))
+  c20 = Bool(CellOccupied(cx + 1, cy - 1))
+  c02 = Bool(CellOccupied(cx - 1, cy + 1))
+  c22 = Bool(CellOccupied(cx + 1, cy + 1))
+
+  filled = 0
+  If c00 : filled + 1 : EndIf
+  If c20 : filled + 1 : EndIf
+  If c02 : filled + 1 : EndIf
+  If c22 : filled + 1 : EndIf
+
+  If filled < 3
+    ProcedureReturn #TSPIN_NONE
+  EndIf
+
+  ; Kick test 5 (index 4) is always a full T-Spin.
+  If lastKickIndex = 4
+    ProcedureReturn #TSPIN_FULL
+  EndIf
+
+  Select curRot
+    Case 0
+      frontA = c00 : frontB = c20
+    Case 1
+      frontA = c20 : frontB = c22
+    Case 2
+      frontA = c02 : frontB = c22
+    Default
+      frontA = c00 : frontB = c02
+  EndSelect
+
+  If frontA And frontB
+    ProcedureReturn #TSPIN_FULL
+  EndIf
+
+  ProcedureReturn #TSPIN_MINI
+EndProcedure
+
+; <summary>
 ; GravityMs
 ; </summary>
+; <param name="level">integer</param>
+; <returns>Returns integer.</returns>
 Procedure.i GravityMs(level.i)
   Protected ms.i = 800 - level * 70
 
@@ -288,27 +363,85 @@ Procedure.i GravityMs(level.i)
 EndProcedure
 
 ; <summary>
-; AddScoreForLines
+; AwardClear
+; Guideline-style line / T-Spin / B2B / Combo scoring.
 ; </summary>
-Procedure AddScoreForLines(n.i)
-  Protected base.i
+; <param name="n">integer</param>
+; <param name="tspin">integer</param>
+; <returns>Returns void.</returns>
+Procedure AwardClear(n.i, tspin.i)
+  Protected base.i = 0
+  Protected difficult.i = #False
   Protected oldLevel.i = level
+  Protected lvl.i = level + 1
+  Protected gained.i
+  Protected usedB2B.i = #False
+  Protected shownCombo.i
 
-  Select n
-    Case 1 : base = 40
-    Case 2 : base = 100
-    Case 3 : base = 300
-    Case 4 : base = 1200
-    Default : base = 0
-  EndSelect
+  If tspin = #TSPIN_NONE
+    Select n
+      Case 1 : base = 100
+      Case 2 : base = 300
+      Case 3 : base = 500
+      Case 4 : base = 800 : difficult = #True
+    EndSelect
+  ElseIf tspin = #TSPIN_MINI
+    Select n
+      Case 0 : base = 100
+      Case 1 : base = 200 : difficult = #True
+      Case 2 : base = 400 : difficult = #True
+    EndSelect
+  Else
+    Select n
+      Case 0 : base = 400
+      Case 1 : base = 800 : difficult = #True
+      Case 2 : base = 1200 : difficult = #True
+      Case 3 : base = 1600 : difficult = #True
+    EndSelect
+  EndIf
 
-  score + base * (level + 1)
-  lines + n
-  level = lines / 10
+  If n > 0
+    If difficult And backToBack
+      base = base * 3 / 2
+      usedB2B = #True
+    EndIf
+
+    gained = base * lvl
+    If comboCount > 0
+      gained + 50 * comboCount * lvl
+    EndIf
+    shownCombo = comboCount
+
+    score + gained
+    lines + n
+    level = lines / 10
+    comboCount + 1
+
+    If difficult
+      backToBack = #True
+    Else
+      backToBack = #False
+    EndIf
+  Else
+    If base > 0
+      score + base * lvl
+    EndIf
+    comboCount = 0
+    shownCombo = 0
+  EndIf
 
   If score > highScore
     highScore = score
   EndIf
+
+  clearMsg = ClearKindText(n, tspin)
+  If usedB2B
+    clearMsg = "B2B " + clearMsg
+  EndIf
+  If n > 0 And shownCombo > 0
+    clearMsg + "  COMBO x" + Str(shownCombo)
+  EndIf
+  clearMsgAt = ElapsedMilliseconds()
 
   If level > oldLevel
     levelFxAt = ElapsedMilliseconds()
@@ -436,7 +569,6 @@ Procedure PrepareLineFall()
   Next
 
   SpawnClearParticles()
-  pendingClearScore = clearCount
   lineFallAt = ElapsedMilliseconds()
   gameState = #STATE_LINEFALL
   UpdateStatus()
@@ -476,12 +608,13 @@ Procedure ApplyLineClear()
     fallDist(y) = 0
   Next
 
-  If pendingClearScore > 0
-    AddScoreForLines(pendingClearScore)
+  If pendingLines > 0
+    AwardClear(pendingLines, pendingTSpin)
   EndIf
 
   clearCount = 0
-  pendingClearScore = 0
+  pendingLines = 0
+  pendingTSpin = #TSPIN_NONE
 EndProcedure
 
 ; <summary>
@@ -511,6 +644,9 @@ EndProcedure
 ; <summary>
 ; StartDropTrail
 ; </summary>
+; <param name="fromY">integer</param>
+; <param name="toY">integer</param>
+; <returns>Returns void.</returns>
 Procedure StartDropTrail(fromY.i, toY.i)
   dropTrailAt = ElapsedMilliseconds()
   dropTrailX = curX
@@ -523,6 +659,8 @@ EndProcedure
 ; <summary>
 ; StartSpawnWait
 ; </summary>
+; <param name="afterClear">integer</param>
+; <returns>Returns void.</returns>
 Procedure StartSpawnWait(afterClear.i)
   gameState = #STATE_SPAWNWAIT
 
@@ -540,11 +678,13 @@ EndProcedure
 ; </summary>
 Procedure LockPiece()
   Protected i.i, cx.i, cy.i
+  Protected tspin.i
 
   If curType < 0
     ProcedureReturn
   EndIf
 
+  tspin = DetectTSpin()
   StartLockFx()
 
   For i = 0 To #CELLS_PER_PIECE - 1
@@ -563,10 +703,20 @@ Procedure LockPiece()
   curType = #PIECE_NONE
 
   If MarkFullLines() > 0
+    pendingLines = clearCount
+    pendingTSpin = tspin
     gameState = #STATE_LINECLEAR
     lineClearAt = ElapsedMilliseconds()
+    clearMsg = ClearKindText(clearCount, tspin)
+    If backToBack And (clearCount = 4 Or tspin <> #TSPIN_NONE)
+      clearMsg = "B2B " + clearMsg
+    EndIf
+    If comboCount > 0
+      clearMsg + "  COMBO x" + Str(comboCount)
+    EndIf
+    clearMsgAt = ElapsedMilliseconds()
 
-    If clearCount >= 4
+    If clearCount >= 4 Or tspin = #TSPIN_FULL
       PlaySoundSafe(#SOUND_TETRIS)
     Else
       PlaySoundSafe(#SOUND_CLEAR)
@@ -574,8 +724,16 @@ Procedure LockPiece()
 
     UpdateStatus()
   Else
+    If tspin <> #TSPIN_NONE
+      AwardClear(0, tspin)
+    Else
+      comboCount = 0
+    EndIf
+    lastAction = #ACTION_NONE
     StartSpawnWait(#False)
   EndIf
+
+  lastAction = #ACTION_NONE
 EndProcedure
 
 ; <summary>
@@ -587,6 +745,8 @@ Procedure SpawnPiece()
   curX = 3
   curY = 0
   lockResets = 0
+  lastAction = #ACTION_NONE
+  lastKickIndex = 0
   ResetLock()
   gravityAt = ElapsedMilliseconds()
   gameState = #STATE_PLAYING
@@ -611,6 +771,7 @@ Procedure.b HoldPiece()
   holdUsed = #True
   PlaySoundSafe(#SOUND_HOLD)
   lockResets = 0
+  lastAction = #ACTION_NONE
 
   If holdType = #PIECE_NONE
     holdType = curType
@@ -623,6 +784,7 @@ Procedure.b HoldPiece()
     curRot = 0
     curX = 3
     curY = 0
+    lastKickIndex = 0
     ResetLock()
     gravityAt = ElapsedMilliseconds()
 
@@ -677,6 +839,7 @@ Procedure HardDrop()
 
   curY = gy
   score + dropped * 2
+  ; Keep ROTATE so T-Spin + hard-drop still counts (guideline feel).
 
   If score > highScore
     highScore = score

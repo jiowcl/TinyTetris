@@ -3,8 +3,8 @@
 ;  Code released under the MIT license.
 ;--------------------------------------------------------------------------------------------
 
-#APP_VERSION$     = "1.2"
-#VERSION          = 1.2
+#APP_VERSION$     = "1.3"
+#VERSION          = 1.3
 
 ; Playfield (2 hidden rows above for spawn)
 #FIELD_W          = 10
@@ -25,6 +25,18 @@
 #ROT_COUNT        = 4
 #CELLS_PER_PIECE  = 4
 #NEXT_COUNT       = 3
+#SRS_KICK_TESTS   = 5
+
+; Last piece action (for T-Spin)
+#ACTION_NONE      = 0
+#ACTION_MOVE      = 1
+#ACTION_ROTATE    = 2
+#ACTION_DROP      = 3
+
+; T-Spin result
+#TSPIN_NONE       = 0
+#TSPIN_MINI       = 1
+#TSPIN_FULL       = 2
 
 ; Game state
 #STATE_PLAYING    = 0
@@ -34,16 +46,30 @@
 #STATE_SPAWNWAIT  = 4
 #STATE_GAMEOVER   = 5
 
-; Window / gadgets
+; Window / gadgets — main
 #WIN_MAIN         = 0
 #CANVAS           = 1
 #BTN_RESTART      = 2
 #BTN_PAUSE        = 3
-#CHK_SOUND        = 4
-#CHK_MUSIC        = 5
-#LBL_STATUS       = 6
-#LBL_VERSION      = 7
-#LBL_HELP         = 8
+#BTN_SETTINGS     = 4
+#CHK_SOUND        = 5
+#CHK_MUSIC        = 6
+#LBL_STATUS       = 7
+#LBL_VERSION      = 8
+#LBL_HELP         = 9
+
+; Window / gadgets — settings
+#WIN_SETTINGS     = 1
+#TRK_DAS          = 20
+#TRK_ARR          = 21
+#TRK_MUSIC_VOL    = 22
+#LBL_DAS_TITLE    = 23
+#LBL_ARR_TITLE    = 24
+#LBL_MVOL_TITLE   = 25
+#LBL_DAS_VAL      = 26
+#LBL_ARR_VAL      = 27
+#LBL_MVOL_VAL     = 28
+#BTN_SETTINGS_OK  = 29
 
 ; Canvas
 #CANVAS_DEFAULT_W = 420
@@ -63,6 +89,7 @@
 #FX_LOCK_MS          = 140
 #FX_DROP_TRAIL_MS    = 110
 #FX_LEVEL_MS         = 700
+#FX_CLEAR_MSG_MS     = 1000
 
 ; Input keys (virtual-key codes)
 #VK_LEFT          = $25
@@ -89,7 +116,7 @@
 #SOUND_GAMEOVER   = 200
 
 ; Music (tracker module via ModPlug)
-; From: https://pansound.com/panicpumpkin/music/hageshii.html 
+; From: https://pansound.com/panicpumpkin/music/hageshii.html
 #MUSIC_BGM            = 0
 #MUSIC_VOLUME_DEFAULT = 50
 #MUSIC_PAUSE_VOLUME   = 12
@@ -116,6 +143,7 @@ Declare ApplyPrefsToUi()
 Declare SavePrefs()
 Declare PlaySoundSafe(soundId.i)
 Declare UpdateStatus()
+Declare.s ClearKindText(n.i, tspin.i)
 
 Declare.s ResolveAssetPath(fileName.s)
 Declare.b TryLoadBgmFile(fileName.s)
@@ -135,6 +163,7 @@ Declare.i PieceColor(type.i)
 Declare.i NormRot(rot.i)
 Declare.i PieceCellX(type.i, rot.i, cell.i)
 Declare.i PieceCellY(type.i, rot.i, cell.i)
+Declare FillSrsKick(type.i, fromRot.i, dir.i, test.i)
 
 Declare SyncCanvasSize()
 Declare CalculateLayout()
@@ -154,6 +183,8 @@ Declare OnGroundAction()
 Declare.b TouchingGround()
 Declare.b TryMove(dx.i, dy.i)
 Declare.b TryRotate(dir.i)
+Declare.i DetectTSpin()
+Declare AwardClear(n.i, tspin.i)
 Declare LockPiece()
 Declare.i MarkFullLines()
 Declare PrepareLineFall()
@@ -168,7 +199,6 @@ Declare.b HoldPiece()
 Declare SoftDropStep()
 Declare HardDrop()
 Declare.i GravityMs(level.i)
-Declare AddScoreForLines(n.i)
 Declare FinishGame()
 Declare ClearField()
 
@@ -182,6 +212,7 @@ Declare DrawParticles()
 Declare DrawDropTrail()
 Declare DrawLockFx()
 Declare DrawLevelFx()
+Declare DrawClearMsg()
 Declare.b EffectsActive()
 Declare EffectsTick()
 
@@ -190,18 +221,13 @@ Declare InputTick()
 Declare CanvasGadgetEvent()
 Declare FocusCanvas()
 
+Declare OpenSettingsPanel()
+Declare CloseSettingsPanel()
+Declare SyncSettingsPanel()
+Declare ApplySettingsFromPanel()
+Declare SettingsPanelEvent()
+
 Declare InitGame()
 Declare RestartGame()
 Declare TogglePause()
 Declare GameTick()
-
-; IDE Options = PureBasic 6.40 (Windows - x64)
-; CursorPosition = 91
-; FirstLine = 54
-; Optimizer
-; EnableAsm
-; EnableXP
-; DPIAware
-; EnableOnError
-; DisableDebugger
-; CompileSourceDirectory

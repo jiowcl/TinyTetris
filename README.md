@@ -31,19 +31,19 @@ Module features require PureBasic 5.20 and above. Enable Unicode and save source
 | P | Pause |
 | R | Restart |
 
-Buttons: **Restart**, **Pause**, **Sound**, **Music**. Preferences (SFX, BGM, high score, DAS) are stored in `TinyTetris.ini` next to the executable.
+Buttons: **Restart**, **Pause**, **Settings**, **Sound**, **Music**. Preferences are stored in `TinyTetris.ini` next to the executable.
 
 ## Features
 
 - 10×20 playfield (2 hidden spawn rows)
-- 7 tetrominoes with simple wall kicks
+- 7 tetrominoes with **SRS** orientations and wall-kick tables
 - 7-bag randomizer, Next queue ×3, Hold (dimmed when used)
 - Ghost piece, soft / hard drop with drop trail
-- Tunable DAS/ARR (`DasDelay` / `DasRepeat` in `TinyTetris.ini`)
+- Settings panel for DAS / ARR / Music volume
 - Lock delay with reset limit (15), lock flash, grounded pulse
 - Line-clear flash → stack fall animation → spawn delay
-- Clear particles, level-up banner
-- Nintendo-style scoring and level speed-up
+- Guideline-style scoring: T-Spin / Mini, Back-to-Back, Combo
+- Clear particles, level-up banner, clear message overlay
 - Optional WAV SFX + tracker BGM (`bgm.xm` / `.it` / `.mod` / `.wav` under `Sound/`)
 - Music pause-duck and game-over fade-out; missing BGM file is skipped safely
 

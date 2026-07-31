@@ -25,13 +25,15 @@ IncludeFile "./Core/Board.pbi"
 IncludeFile "./Core/Drawing.pbi"
 IncludeFile "./Core/Game.pbi"
 IncludeFile "./Core/Input.pbi"
+IncludeFile "./Core/Settings.pbi"
 
 ; Ui
 If OpenWindow(#WIN_MAIN, #PB_Ignore, #PB_Ignore, 450, 680, "TinyTetris " + #APP_VERSION$ + " by Jiowcl", #PB_Window_SystemMenu | #PB_Window_MinimizeGadget | #PB_Window_ScreenCentered)
   CanvasGadget(#CANVAS, 15, 15, canvasW, canvasH)
 
-  ButtonGadget(#BTN_RESTART, 15, 545, 200, 35, "Restart")
-  ButtonGadget(#BTN_PAUSE, 225, 545, 210, 35, "Pause")
+  ButtonGadget(#BTN_RESTART, 15, 545, 130, 35, "Restart")
+  ButtonGadget(#BTN_PAUSE, 155, 545, 130, 35, "Pause")
+  ButtonGadget(#BTN_SETTINGS, 295, 545, 140, 35, "Settings")
 
   CheckBoxGadget(#CHK_SOUND, 15, 588, 80, 24, "Sound")
   SetGadgetState(#CHK_SOUND, #True)
@@ -61,41 +63,58 @@ If OpenWindow(#WIN_MAIN, #PB_Ignore, #PB_Ignore, 450, 680, "TinyTetris " + #APP_
 
     Select WaitWindowEvent(10)
       Case #PB_Event_CloseWindow
-        Break
+        If EventWindow() = #WIN_SETTINGS
+          CloseSettingsPanel()
+        Else
+          Break
+        EndIf
 
       Case #PB_Event_Gadget
-        Select EventGadget()
-          Case #BTN_RESTART
-            RestartGame()
+        If EventWindow() = #WIN_SETTINGS
+          Select EventGadget()
+            Case #TRK_DAS, #TRK_ARR, #TRK_MUSIC_VOL
+              ApplySettingsFromPanel()
+            Case #BTN_SETTINGS_OK
+              CloseSettingsPanel()
+          EndSelect
+        Else
+          Select EventGadget()
+            Case #BTN_RESTART
+              RestartGame()
 
-          Case #BTN_PAUSE
-            TogglePause()
+            Case #BTN_PAUSE
+              TogglePause()
 
-          Case #CHK_SOUND
-            soundEnabled = GetGadgetState(#CHK_SOUND)
-            SavePrefs()
-            FocusCanvas()
+            Case #BTN_SETTINGS
+              OpenSettingsPanel()
 
-          Case #CHK_MUSIC
-            If musicLoaded
-              musicEnabled = GetGadgetState(#CHK_MUSIC)
+            Case #CHK_SOUND
+              soundEnabled = GetGadgetState(#CHK_SOUND)
               SavePrefs()
-              If musicEnabled
-                If gameState = #STATE_PAUSED
-                  StartBgm()
-                  PauseBgm()
-                ElseIf gameState <> #STATE_GAMEOVER
-                  StartBgm()
+              FocusCanvas()
+
+            Case #CHK_MUSIC
+              If musicLoaded
+                musicEnabled = GetGadgetState(#CHK_MUSIC)
+                SavePrefs()
+                If musicEnabled
+                  If gameState = #STATE_PAUSED
+                    StartBgm()
+                    PauseBgm()
+                  ElseIf gameState <> #STATE_GAMEOVER
+                    StartBgm()
+                  EndIf
+                Else
+                  StopBgm()
                 EndIf
-              Else
-                StopBgm()
               EndIf
-            EndIf
-            FocusCanvas()
-        EndSelect
+              FocusCanvas()
+          EndSelect
+        EndIf
     EndSelect
   ForEver
 
+  CloseSettingsPanel()
   SavePrefs()
   FreeBgm()
 
