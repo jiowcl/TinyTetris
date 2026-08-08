@@ -2,8 +2,9 @@
 
 A tiny Tetris game written in PureBasic.  
 
+![GitHub](https://img.shields.io/github/license/jiowcl/TinyTetris.svg)
 ![PureBasic](https://img.shields.io/badge/language-PureBasic-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+![Category](https://img.shields.io/badge/Game-Tetris-FFD166?style=flat-square&logoColor=black)
 
 ![Screenshot](./Screenshot/Demo1.png)
 
